@@ -1,2 +1,2 @@
 @echo off
-explorer.exe "%~dp0"
+"%SystemRoot%\explorer.exe" "%~dp0"

@@ -1,4 +1,6 @@
 @echo off
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0tools\package.ps1" -Portable
-if errorlevel 1 echo Packaging did not finish. See the message above.
+"%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -ExecutionPolicy Bypass -File "%~dp0tools\package.ps1" -Portable
+set "VIDEO_TOOLS_EXIT=%errorlevel%"
+if not "%VIDEO_TOOLS_EXIT%"=="0" echo The operation did not finish. See the message above.
 pause
+exit /b %VIDEO_TOOLS_EXIT%

@@ -10,7 +10,7 @@ A self-contained Windows browser extension for saving videos, MP3 audio and Mark
 4. Choose **Load unpacked** and select the **project folder containing manifest.json**.
 5. Pin **Video Tools** from the browser's extensions menu.
 
-Supported systems: **64-bit Windows 10 and 11**, with Brave, Chrome or Edge. You do not need Python, Node, FFmpeg, npm or another application installed separately. Everything used for downloading lives in this folder. Setup does not require administrator rights or modify global PATH or Python installations.
+Supported systems: **Windows 10 and 11 (x64)**, with Brave, Chrome or Edge. No separate downloader or globally installed Python, Node, FFmpeg or npm is required. Everything used for downloading lives in this folder. Setup does not require administrator rights or modify global PATH or Python installations.
 
 A browser extension needs a registered native companion to run video conversion. That companion ships in this project. Setup registers its current location for your Windows account; **rerun Setup.cmd after moving the folder or copying it to another computer**. Loading only the browser files without setup does not enable downloads.
 
@@ -47,7 +47,7 @@ There is no hosted backend or analytics. Page access is temporary and requested 
 
 Settings can connect an exported Netscape cookies file explicitly. yt-dlp may refresh that selected file. The extension does not copy it into the project or GitHub. Disconnect it when finished. Folder/cookie dialogs may close the toolbar popup when they take focus; reopen it after making the selection.
 
-`runtime/` contains private tools. Ignored `.local/` contains configuration, jobs, build outputs and download caches. Neither is committed to Git. If you put this folder in a synced location, its contents follow that sync service's settings; Git ignore does not disable cloud sync.
+`runtime/` contains private tools. Ignored `.local/` contains configuration, jobs, build outputs and download caches. Neither is committed to Git. Copied settings from a different computer/user are not used for output paths or cookies. If you put this folder in a synced location, its contents follow that sync service's settings; Git ignore does not disable cloud sync.
 
 The companion uses native messaging, restricted to extension ID `mhjikjpcejlbldbjckejfdjbomcodkon`. No HTTP listener is opened. It exits after about 15 idle seconds; active workers continue independently. Setup writes this application's `com.marin.video_tools` entry under the current user's Chrome, Edge and Brave `NativeMessagingHosts` registry locations. Moving to another computer requires registration there as well.
 

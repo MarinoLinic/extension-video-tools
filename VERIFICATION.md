@@ -1,11 +1,24 @@
 # Verification — 17 October 2026
 
-Windows, Brave, the project-local Python runtime and yt-dlp 2026.08.19. No browser-profile cookies were read or used. QA used an isolated browser profile and files under `C:\Users\marin\agent-files\trash\extension-video-tools-qa-20261017`.
+Windows, Brave, embedded CPython 3.12.10, private Node 26.7.0, FFmpeg/FFprobe 9.0.2 and yt-dlp 2026.08.19. No browser-profile cookies were read or used. QA used an isolated browser profile and files under `C:\Users\marin\agent-files\trash\extension-video-tools-qa-20261017`.
+
+## Standalone and relocation checks (1.1.0)
+
+- The browser manifest is at the project root; every declared UI/script/icon path resolves from that root. Actual Brave loading was tested from the root.
+- Downloading and caption parsing use only code in `host/` and packages in the private embedded interpreter. No external source checkout or global tool installation is used.
+- Vendor archives passed their pinned SHA-256 checks. The portable ZIP includes CPython, Node, FFmpeg/FFprobe, packages, licenses and the compiled native launcher; its manifest is at the ZIP root.
+- Extracted the bundle to a different directory containing a space, outside the repository. Removed Python, Node and FFmpeg from the test process's PATH, leaving Windows system paths only.
+- `tools/setup.ps1 -Offline` succeeded in that relocated copy without downloads, pip installation or a Python installation on PATH. The interpreter and all three external tools resolved inside the relocated folder.
+- All seven Python host tests and the manifest/assets check passed from that copy.
+- The complete isolated Brave smoke test passed against the relocated companion, including a download after closing the popup, with no page exceptions.
+- Live YouTube clip/transcript, X clip, Facebook clip, generic MP4/MP3, captionless failure and cancellation checks passed from the relocated runtime. FFprobe verified the media streams and durations listed below.
+- Config and job history are excluded from the portable ZIP. Generated console wrappers and bytecode caches are excluded as well. Per-file checksums are included.
+- This was a relocated-copy test on the development PC, not a test on separate physical hardware. The supported target is Windows x64.
 
 ## Automated checks
 
 - Three JavaScript tests: subsecond/time parsing, invalid ranges, full-video semantics, playlist/timestamp URL normalization and request construction.
-- Six Python tests: URL restrictions, options validation, job path restrictions, framed native messages, streaming replies before stdin closes, and cancellation of an already running process plus its descendant.
+- Seven Python tests: URL restrictions, options validation, job path restrictions, framed native messages, streaming replies before stdin closes, cancellation of an already running process plus its descendant, and resetting copied settings for a different computer/user.
 - Manifest/assets/syntax check: stable ID, all declared files, no persistent host permissions, no automatic content scripts or cookies permission.
 - Browser DOM fixtures: YouTube duration/current time, X multiple video attachment selection, Facebook permalink and identity-matched progressive JSON, exclusion of another video's URLs, and generic media discovery.
 - Actual Brave extension: native connection, metadata loading, exact boundaries, Alt adjustments, timeline zoom, saved output mode, per-video trim persistence, invalid-range blocking, download continuation after closing the popup, recent status and no page exceptions.
@@ -18,7 +31,7 @@ Windows, Brave, the project-local Python runtime and yt-dlp 2026.08.19. No brows
 | YouTube `dmoaGcylPf0` | 15.125–18.875 s | MP4, H.264 + AAC, 3.800 s; requested 3.750 s |
 | Same YouTube video | 170.25–180.75 s | Nonempty Markdown transcript; selection metadata and whole overlapping English caption text checked |
 | X `captainamerica/status/719944021058060289` | 0.25–1.75 s | MP4, H.264 + AAC, 1.5015 s |
-| Facebook `100033620354545/videos/106560053808006` | 0.25–1.75 s | MP4, H.264 + AAC, 1.5330 s |
+| Facebook `100033620354545/videos/106560053808006` | 0.25–1.75 s | MP4, H.264 + AAC, 1.5333 s |
 | W3Schools `html/mov_bbb.mp4` | 1.25–3.75 s | MP4, H.264 + AAC, 2.560 s; completed after popup closed |
 | Same direct file | 1.25–3.75 s | MP3 audio, 2.5047 s |
 | Same direct file, transcript mode | Full video | Correctly failed for missing captions; no empty transcript published |
