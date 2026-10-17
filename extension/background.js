@@ -33,7 +33,7 @@ function native(action, payload={}) {
     pending.set(id,{resolve,reject,timer}); port.postMessage({...payload,action,_request:id});
   });
 }
-const actions=new Set(['health','inspect','download','jobs','cancel','pick_folder','pick_cookies','clear_cookies','reveal']);
+const actions=new Set(['health','inspect','download','jobs','cancel','pick_folder','pick_cookies','clear_cookies','reveal','open_file']);
 chrome.runtime.onMessage.addListener((message,sender,respond)=>{
   // Page scripts and content scripts cannot call the helper, even from an allowed site.
   if (sender.id!==chrome.runtime.id || !sender.url?.startsWith(chrome.runtime.getURL('')) || !actions.has(message?.action)) return false;

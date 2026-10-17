@@ -29,7 +29,7 @@ The arrow beside Download chooses **Video**, **Audio** or **Transcript**. Your c
 - **Use player time** copies the selected player's position. Preview seeks and plays from the start; it does not automatically stop at the selected end.
 - Each video keeps its own selection during the browser session.
 
-The larger window is available from the arrow in the header. Downloads continue after the popup or browser closes. Recent jobs show progress, cancel, retry and Show in folder. Up to two jobs run at once.
+The larger window is available from the arrow in the header. Downloads continue after the popup or browser closes. Recent jobs show progress, cancel and retry. Completed jobs have separate **Open file** and **Show in folder** actions. Up to two jobs run at once.
 
 ## Formats and limits
 

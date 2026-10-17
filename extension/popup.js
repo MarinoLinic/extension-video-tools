@@ -147,20 +147,26 @@ function renderJobs(items) {
     const active=['queued','running','cancelling'].includes(job.state);
     const detail=element('p','',job.message || ''); card.append(detail);
     if(active) {const progress=element('progress');progress.max=100;if(Number.isFinite(job.percent))progress.value=job.percent;progress.setAttribute('aria-label',`Download progress for ${job.title}`);card.append(progress);}
-    const button=element('button','',active?'Cancel':job.state==='completed'?'Show in folder':'Retry');
-    button.addEventListener('click',safe(async()=>{
-      button.disabled=true;
-      if(active) await rpc('cancel',{id:job.id});
-      else if(job.state==='completed') await rpc('reveal',{id:job.id});
-      else {
+    const actions=element('div','job-actions');
+    const addAction=(label,run)=>{
+      const button=element('button','',label);button.addEventListener('click',safe(async()=>{
+        button.disabled=true;
+        try { await run(); await refreshJobs(true); }
+        finally { button.disabled=false; }
+      }));actions.append(button);
+    };
+    if(active) addAction('Cancel',()=>rpc('cancel',{id:job.id}));
+    else if(job.state==='completed') {
+      addAction('Open file',()=>rpc('open_file',{id:job.id}));
+      addAction('Show in folder',()=>rpc('reveal',{id:job.id}));
+    } else addAction('Retry',async()=>{
         // Retry uses a fresh deliberate click with this video's current options; don't silently retry a different URL.
         const saved=await chrome.storage.local.get(`request:${job.id}`);
         if (!saved[`request:${job.id}`]) throw new Error('Open the source video and start another download.');
         const request=saved[`request:${job.id}`];const next=await rpc('download',request);
         await chrome.storage.local.set({[`request:${next.id}`]:request});
-      }
-      button.disabled=false;await refreshJobs(true);
-    })); card.append(button);
+      });
+    card.append(actions);
     if (job.log?.length) {const details=element('details');details.append(element('summary','','Details'),element('pre','',job.log.join('\n')));card.append(details);}
     root.append(card);
   }

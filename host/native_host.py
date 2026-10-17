@@ -107,6 +107,12 @@ def dispatch(data):
         if not files or not Path(files[0]).is_file(): raise ValueError('Saved file was not found.')
         subprocess.Popen(['explorer.exe','/select,',str(Path(files[0]).resolve())],creationflags=subprocess.CREATE_NO_WINDOW)
         return {'opened':True}
+    if action == 'open_file':
+        folder=job_path(data.get('id')); state=read_json(folder/'status.json',{})
+        files=state.get('files') or []
+        if not files or not Path(files[0]).is_file(): raise ValueError('Saved file was not found.')
+        os.startfile(str(Path(files[0]).resolve()))
+        return {'opened':True}
     raise ValueError('Unknown helper action.')
 
 def read_exact(stream,count):

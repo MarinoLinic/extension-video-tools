@@ -442,6 +442,11 @@ label {
   font-size:10px;
   padding:4px 8px
 }
+.job-actions {
+  display:flex;
+  gap:6px;
+  margin-top:7px
+}
 .job.failed p {
   color:#f7b0a5
 }

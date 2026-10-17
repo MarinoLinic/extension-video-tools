@@ -1,5 +1,9 @@
 # Verification — 17 October 2026
 
+## Recent-download actions
+
+Completed jobs now offer **Open file** (launches the saved file with its Windows-associated application) alongside **Show in folder**. This UI/helper change has not yet been exercised in browser QA.
+
 Windows, Brave, embedded CPython 3.12.10, private Node 26.7.0, FFmpeg/FFprobe 9.0.2 and yt-dlp 2026.08.19. No browser-profile cookies were read or used. QA used an isolated browser profile and files under `C:\Users\marin\agent-files\trash\extension-video-tools-qa-20261017`.
 
 ## Standalone and relocation checks (1.1.0)
