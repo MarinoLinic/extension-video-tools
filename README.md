@@ -1,79 +1,68 @@
 # Video Tools
 
-A private browser extension for saving videos, MP3 audio and Markdown transcripts, with the clip selected **before** the download starts.
+A self-contained Windows browser extension for saving videos, MP3 audio and Markdown transcripts. Select the start and end before downloading.
 
-Works with Brave, Chrome and Edge on Windows. YouTube uses the existing `projects-python/youtube_tools` engine. X, Facebook and other supported sites use yt-dlp. The extension also detects ordinary media URLs in the current page, and can offer progressive Facebook files exposed in the page’s JSON.
+## Install
 
-## Get started
+1. Extract the **Windows portable bundle** to any writable folder, or download this repository.
+2. Run **Setup.cmd** once on that computer. The portable bundle already includes its tools and can be set up offline. A source checkout downloads private copies automatically the first time.
+3. Open `brave://extensions`, `chrome://extensions` or `edge://extensions`, and enable **Developer mode**.
+4. Choose **Load unpacked** and select the **project folder containing manifest.json**.
+5. Pin **Video Tools** from the browser's extensions menu.
 
-1. Double-click **Setup.cmd**. It creates an isolated Python environment and registers the native helper for your Windows account. No administrator access is needed.
-2. Open `brave://extensions`, `chrome://extensions` or `edge://extensions` and enable **Developer mode**.
-3. Choose **Load unpacked**, then select this repository’s **extension** folder. Do not select the repository root.
-4. Pin **Video Tools** from the browser’s extensions menu.
+Supported systems: **64-bit Windows 10 and 11**, with Brave, Chrome or Edge. You do not need Python, Node, FFmpeg, npm or another application installed separately. Everything used for downloading lives in this folder. Setup does not require administrator rights or modify global PATH or Python installations.
 
-The helper is already set up on the original development machine. Loading the extension in your normal browser is the remaining installation step.
+A browser extension needs a registered native companion to run video conversion. That companion ships in this project. Setup registers its current location for your Windows account; **rerun Setup.cmd after moving the folder or copying it to another computer**. Loading only the browser files without setup does not enable downloads.
 
-Requirements: Windows, Python 3.10 or later with Tkinter, FFmpeg and FFprobe on PATH, and the sibling YouTube Tools project. Node.js or Deno is recommended for YouTube’s JavaScript challenges. Setup installs dependencies only into this repository’s `.local/runtime`; it does not modify the existing YouTube Tools environment, global Python, PATH, browser policies or browser profiles.
+The small browser-only ZIP is for browser installation when the companion is already installed. For transferring the complete application, use the **Windows portable ZIP** or copy the whole initialized project, including `runtime/`.
 
-## Save a video or a clip
+## Download
 
-Open a video and click the pinned extension. If a feed has several videos, choose the item from the selector. You can also paste a video link, or right-click a video or link and choose **Download with Video Tools**.
+Open a video and click Video Tools. Choose the desired video if a page has several, paste a link, or right-click a video/link and choose **Download with Video Tools**.
 
-Use the arrow beside Download to choose **Video**, **Audio** or **Transcript**. Your choice is remembered, along with quality, caption languages and the precise-cut setting. Downloads default to `~/Videos/Video Tools`; Settings has a native folder picker.
+The arrow beside Download chooses **Video**, **Audio** or **Transcript**. Your choice is remembered. Settings also remember the quality ceiling, caption languages and precise-cut preference. Downloads default to `Videos/Video Tools`; choose a different destination in Settings.
 
-- Drag the two timeline handles to select a range. **Full video** resets it.
-- Type seconds, `2:50`, or `1:02:50.250` into either time field. A blank end means the end of the video.
-- The ± buttons change a boundary by one second. Hold **Alt** for 0.1 seconds or **Shift** for 10 seconds. Native slider arrow keys move by 0.1 seconds.
-- **Zoom in** changes the timeline scale for finer dragging; **Show all** restores the complete timeline.
-- **Use player time** copies the current position of the selected player. **Preview** seeks and plays that page’s player from the selected start. Preview does not automatically stop at the selected end.
-- Clip boundaries are kept per video for the current browser session. They do not carry over to unrelated videos.
+- Drag both timeline handles, or type seconds, `2:50`, or `1:02:50.250` for exact boundaries.
+- The +/- buttons move by 1 second. Hold **Alt** for 0.1 seconds or **Shift** for 10 seconds.
+- **Full video** resets the selection. A blank end means the end of the video.
+- **Zoom in** narrows the timeline scale. **Show all** restores it.
+- **Use player time** copies the selected player's position. Preview seeks and plays from the start; it does not automatically stop at the selected end.
+- Each video keeps its own selection during the browser session.
 
-The ↗ button opens a larger window. A download continues after the popup or browser closes. Recent downloads show progress, cancellation, errors, retry and **Show in folder**. At most two jobs run at once.
+The larger window is available from the arrow in the header. Downloads continue after the popup or browser closes. Recent jobs show progress, cancel, retry and Show in folder. Up to two jobs run at once.
 
-## Output and limits
+## Formats and limits
 
-Video output is MP4; audio output is MP3. Video quality is a ceiling, not an upscaler. A source with no audio remains silent. Precise video cuts are enabled by default and re-encode the selected section. Frame rate and audio packet boundaries can make the resulting duration differ slightly from the entered interval. Turning precise cuts off allows faster cuts near keyframes.
+Video is saved as MP4 and audio as MP3. Precise video cuts re-encode by default; disabling them allows faster cuts near keyframes. Frame rate and audio packet boundaries can make the saved duration slightly different from the entered decimal value. Quality settings are ceilings, not upscaling.
 
-Transcripts use existing captions in the requested languages, with manual captions preferred. There is no speech recognition. Missing captions are an error, never an empty successful transcript. A selected transcript retains whole overlapping cues and the original-video timing.
+Transcripts come from available captions, with manual captions preferred. They are Markdown, not generated summaries or speech recognition. Missing captions cause an error. A selected transcript keeps whole overlapping cues and original-video timing.
 
-YouTube video links are treated as one video even if the URL includes a playlist. URL timestamp hints do not silently change your explicit clip selection. Live and upcoming broadcasts are unsupported.
+YouTube, X, Facebook and many other sources are handled by the included yt-dlp package. The page scanner can also find ordinary media URLs and identity-matched Facebook progressive files. Support depends on the video, site behavior and access restrictions. DRM, unavailable/private content, live broadcasts, expired links and some blob streams are unsupported. Refresh a page before retrying an expired direct link. Open cross-origin embedded players on their own page if they cannot be detected.
 
-Support depends on the particular source and the current site. DRM, inaccessible/private videos, expired links, some blob streams and provider restrictions can prevent downloads. A Facebook feed item may work through its permalink, an exposed progressive file, or a manually pasted direct link. Signed media URLs can expire; refresh the page before retrying. Cross-origin iframe players may be inaccessible under the extension’s limited permissions; open the embedded video’s own page or paste its link.
+Video links do not expand into playlists, and URL timestamp hints do not silently replace your chosen boundaries. Existing files are preserved. Downloads are staged under `.video-tools-work` in the destination, validated with FFprobe and published with unique names. Partial files remain after failure or cancellation; no automatic deletion is performed.
 
-Existing output files are preserved. Each job receives a unique filename suffix. Files are staged in the destination’s `.video-tools-work/<job-id>` and published after validation; media must pass FFprobe checks. Failed or cancelled partial files stay there for inspection. The extension does not clean or delete your files.
+## Privacy and local setup
 
-## Privacy and installation effects
+There is no hosted backend or analytics. Page access is temporary and requested when you invoke the extension. Browsing history and browser cookies are not collected automatically. Provider requests still go to the original video sites.
 
-There is no analytics service, hosted backend or automatic browser-cookie reading. The extension requests temporary access to the active tab when invoked, and reads the selected page’s media information. It has no persistent access to every site and does not scan browsing history.
+Settings can connect an exported Netscape cookies file explicitly. yt-dlp may refresh that selected file. The extension does not copy it into the project or GitHub. Disconnect it when finished. Folder/cookie dialogs may close the toolbar popup when they take focus; reopen it after making the selection.
 
-The browser communicates with the helper through native messaging, restricted to the extension’s stable ID. No HTTP listener is opened. The idle helper exits about 15 seconds after the popup stops making requests; active download workers finish independently. Requests still go to the original media providers.
+`runtime/` contains private tools. Ignored `.local/` contains configuration, jobs, build outputs and download caches. Neither is committed to Git. If you put this folder in a synced location, its contents follow that sync service's settings; Git ignore does not disable cloud sync.
 
-Settings can explicitly connect an exported Netscape cookies file for authenticated downloads. **yt-dlp may refresh the selected file.** Cookies are not copied into the repository, sent to GitHub or read from browser profiles. Disconnect the file when finished. Native file dialogs can close a toolbar popup when they take focus; reopen the popup after choosing a folder or cookies file.
+The companion uses native messaging, restricted to extension ID `mhjikjpcejlbldbjckejfdjbomcodkon`. No HTTP listener is opened. It exits after about 15 idle seconds; active workers continue independently. Setup writes this application's `com.marin.video_tools` entry under the current user's Chrome, Edge and Brave `NativeMessagingHosts` registry locations. Moving to another computer requires registration there as well.
 
-Runtime files, selected-folder configuration and local job history live under ignored `.local`. Output defaults to Videos, outside the repository. This repository itself is in OneDrive on the original machine: `.gitignore` excludes files from Git, but does **not** exclude them from OneDrive. Do not place cookie files in a synced project folder if you want them to stay off that sync service.
+## Maintenance
 
-Setup writes only this application’s native-host entries under:
+**Update Tools.cmd** updates this folder's download packages. Runtime archives are pinned with SHA-256 checksums in `tools/runtime-manifest.json`; Python package versions are pinned in `host/requirements.lock.txt`. Runtime licenses are included in the portable bundle; see [THIRD_PARTY.md](THIRD_PARTY.md).
 
-```text
-HKCU\Software\Google\Chrome\NativeMessagingHosts\com.marin.video_tools
-HKCU\Software\Microsoft\Edge\NativeMessagingHosts\com.marin.video_tools
-HKCU\Software\BraveSoftware\Brave-Browser\NativeMessagingHosts\com.marin.video_tools
-```
+**Build Portable.cmd** produces a complete Windows ZIP under `.local/packages`, including the private runtimes and compiled companion. It excludes personal configuration, cookie files, job history, exports, Git data and download caches. `npm run package` creates only the browser ZIP, with manifest.json at its ZIP root.
 
-The extension ID is `mhjikjpcejlbldbjckejfdjbomcodkon`. The manifest contains only a public key so moving the unpacked folder does not change that ID. There is no stored private signing key. If you move the project, rerun setup to update the helper path. Removing or disabling the extension stops browser access; the per-user native-host registrations are inert without a caller.
-
-## Maintenance and verification
-
-**Update Tools.cmd** updates only this extension’s download dependencies. Default setup uses `host/requirements.lock.txt`, the verified baseline; the update launcher uses the allowed ranges in `host/requirements.txt`. Actual installed versions are recorded in `.local/installed-versions.txt`. Close Video Tools windows and wait for the idle helper to exit before rebuilding its executable.
+Development checks can use the included tools directly:
 
 ```powershell
-npm test
-npm run check
-.local\runtime\Scripts\python.exe -X utf8 -m unittest discover -s tests -p test_host.py -v
+runtime\node\node.exe --test tests/*.test.mjs
+runtime\node\node.exe scripts/check.mjs
+runtime\python\python.exe -X utf8 -m unittest discover -s tests -p test_host.py -v
 ```
 
-Browser tests use Playwright and a fresh isolated Brave profile. Set `VIDEO_TOOLS_PLAYWRIGHT` to a Playwright package path and `VIDEO_TOOLS_QA_DIR` to a dedicated folder under the machine’s designated trash/work location. Then run `node tests/page-media.cjs` and `node tests/browser-smoke.cjs`. The latter starts a real download: first configure the helper’s output to the QA folder and restore it afterwards. Network checks in `tests/live-media.py`, `tests/generic-media.py` and `tests/site-probes.py` are opt-in; they never use real browser cookies automatically.
-
-`npm run package` creates a ZIP containing **only** the browser extension under `.local/packages`. Install the helper from this repository separately; do not package runtime/config/job folders. See [VERIFICATION.md](VERIFICATION.md) for the tested cases and [AGENTS.md](AGENTS.md) for maintenance boundaries.
-
-Implementation references: [Chrome native messaging](https://developer.chrome.com/docs/extensions/develop/concepts/native-messaging), [yt-dlp documentation](https://github.com/yt-dlp/yt-dlp), and [yt-dlp supported sites](https://github.com/yt-dlp/yt-dlp/blob/master/supportedsites.md). A listed site does not guarantee every video is accessible.
+Browser tests use an isolated Brave profile, Playwright and a dedicated QA destination. Network media tests are opt-in. [AGENTS.md](AGENTS.md) records maintenance boundaries; [VERIFICATION.md](VERIFICATION.md) records the checks and known limits.

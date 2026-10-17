@@ -8,6 +8,7 @@ from pathlib import Path
 import re
 import time
 import threading
+import socket
 from urllib.parse import urlsplit, urlunsplit, parse_qs, urlencode
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -16,6 +17,8 @@ JOBS = STATE / 'jobs'
 CONFIG = STATE / 'config.json'
 HOST = 'com.marin.video_tools'
 MAX_JOBS = 2
+RUNTIME = ROOT / 'runtime'
+os.environ['PATH'] = os.pathsep.join(str(p) for p in (RUNTIME/'ffmpeg'/'bin', RUNTIME/'node', RUNTIME/'python')) + os.pathsep + os.environ.get('PATH','')
 
 def read_json(path, default=None):
     try:
@@ -38,9 +41,11 @@ def write_json(path, value):
     tmp.replace(path)
 
 def config():
-    return { 'output': str(Path.home() / 'Videos' / 'Video Tools'),
-             'youtube_root': str(ROOT.parent / 'projects-python' / 'youtube_tools'),
-             'cookies': '', **(read_json(CONFIG, {}) or {}) }
+    saved=read_json(CONFIG,{}) or {}
+    machine=socket.gethostname()+'|'+str(Path.home())
+    if saved.get('machine',machine)!=machine: saved={}
+    return {'output':saved.get('output',str(Path.home()/'Videos'/'Video Tools')),
+            'cookies':saved.get('cookies',''),'machine':machine}
 
 def validate_url(value):
     if not isinstance(value, str) or len(value) > 12000 or re.search(r'[\x00-\x20]', value):

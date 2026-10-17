@@ -209,7 +209,7 @@ $('zoomOut').addEventListener('click',()=>{resetScale();renderRange();});
 $('preview').addEventListener('click',safe(()=>player(range.start,true)));
 $('expand').addEventListener('click',safe(async()=>{
   if(source)await chrome.storage.session.set({windowSource:source});
-  await chrome.windows.create({url:chrome.runtime.getURL('popup.html?window=1'),type:'popup',width:620,height:880});
+  await chrome.windows.create({url:chrome.runtime.getURL('extension/popup.html?window=1'),type:'popup',width:620,height:880});
 }));
 $('download').addEventListener('click',safe(async()=>{
   error();readFields();const request=clipRequest(source,range,settings);starting=true;updateDownload();

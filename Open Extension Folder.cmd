@@ -1,2 +1,2 @@
 @echo off
-explorer.exe "%~dp0extension"
+explorer.exe "%~dp0"

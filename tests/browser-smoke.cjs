@@ -3,18 +3,18 @@ const fs=require('node:fs');const path=require('node:path');const assert=require
 const {createHash}=require('node:crypto');
 const playwright=require(process.env.VIDEO_TOOLS_PLAYWRIGHT || 'playwright');
 const root=path.resolve(__dirname,'..');
-const manifest=JSON.parse(fs.readFileSync(path.join(root,'extension','manifest.json')));
+const manifest=JSON.parse(fs.readFileSync(path.join(root,'manifest.json')));
 const id=[...createHash('sha256').update(Buffer.from(manifest.key,'base64')).digest().subarray(0,16)].map(x=>String.fromCharCode(97+(x>>4),97+(x&15))).join('');
 const output=process.env.VIDEO_TOOLS_QA_DIR;if(!output)throw new Error('Set VIDEO_TOOLS_QA_DIR to a dedicated trash folder.');fs.mkdirSync(output,{recursive:true});
 (async()=>{
- const extension=path.join(root,'extension');
+ const extension=root;
  const context=await playwright.chromium.launchPersistentContext(path.join(output,'browser-profile'),{
   executablePath:'C:\\Program Files\\BraveSoftware\\Brave-Browser\\Application\\brave.exe',headless:true,
   args:[`--disable-extensions-except=${extension}`,`--load-extension=${extension}`,'--no-first-run','--disable-background-networking'],viewport:{width:650,height:1000}});
  const errors=[];
  try{
   const page=await context.newPage();page.on('pageerror',error=>errors.push(error.message));
-  await page.goto(`chrome-extension://${id}/popup.html`);
+  await page.goto(`chrome-extension://${id}/extension/popup.html`);
   await page.waitForFunction(()=>document.querySelector('#connection').classList.contains('ready'),undefined,{timeout:30000});
   assert.match(await page.locator('#connection').innerText(),/connected/);
   await page.locator('#urlInput').fill('https://www.w3schools.com/html/mov_bbb.mp4');
@@ -51,7 +51,7 @@ const output=process.env.VIDEO_TOOLS_QA_DIR;if(!output)throw new Error('Set VIDE
   const targetJob=await page.locator('.job').evaluateAll((items,ids)=>items.find(item=>!ids.includes(item.dataset.job)).dataset.job,previousJobs);
   // Close the popup during download; worker must continue.
   await page.close();
-  const next=await context.newPage();await next.goto(`chrome-extension://${id}/popup.html?window=1`);
+  const next=await context.newPage();await next.goto(`chrome-extension://${id}/extension/popup.html?window=1`);
   await next.waitForFunction(id=>{const item=document.querySelector(`[data-job="${id}"]`);return item?.classList.contains('completed') || item?.classList.contains('failed');},targetJob,{timeout:120000});
   assert.ok(await next.locator(`[data-job="${targetJob}"]`).evaluate(item=>item.classList.contains('completed')),await next.locator('#jobs').innerText());
   await next.screenshot({path:path.join(output,'completed.png'),fullPage:true});

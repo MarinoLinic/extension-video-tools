@@ -4,7 +4,7 @@ import {generateKeyPairSync} from 'node:crypto';
 import {createRequire} from 'node:module';
 const require=createRequire(import.meta.url);
 const root=path.resolve(import.meta.dirname,'..');
-const file=path.join(root,'extension','manifest.json');
+const file=path.join(root,'manifest.json');
 const manifest=JSON.parse(fs.readFileSync(file));
 if (!manifest.key) {const {publicKey}=generateKeyPairSync('rsa',{modulusLength:2048});manifest.key=publicKey.export({type:'spki',format:'der'}).toString('base64');fs.writeFileSync(file,JSON.stringify(manifest,null,2)+'\n');}
 const sharp=require(process.env.VIDEO_TOOLS_SHARP || 'sharp');

@@ -7,13 +7,21 @@ import sys
 import threading
 import time
 import unittest
+from unittest.mock import patch
 ROOT=Path(__file__).resolve().parent.parent
 sys.path.insert(0,str(ROOT/'host'))
-from common import validate_url,request_options,job_path
+from common import validate_url,request_options,job_path,config
 from native_host import read_exact
 from worker import Worker,Cancelled
 
 class HostTests(unittest.TestCase):
+    def test_settings_use_this_computer(self):
+        with patch('common.read_json',return_value={'output':'C:/another-user/private','cookies':'C:/another-user/session.txt','machine':'another-computer'}):
+            cfg=config()
+        self.assertEqual(cfg['output'],str(Path.home()/'Videos'/'Video Tools'))
+        self.assertEqual(cfg['cookies'],'')
+        self.assertNotIn('engine_root',cfg)
+
     def test_url_boundary(self):
         for url in ('file:///C:/secret','http://localhost/video','http://127.0.0.1/x','http://192.168.1.1/x','https://user:pass@example.com/v','https://example.com/\n--exec','http://[::1]/x'):
             with self.subTest(url=url),self.assertRaises(ValueError): validate_url(url)

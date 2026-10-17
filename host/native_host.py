@@ -41,17 +41,13 @@ def inspect_video(data):
 
 def picker(kind):
     # Native dialogs are explicit UI actions; no filesystem browsing from page scripts.
-    import tkinter as tk
-    from tkinter import filedialog
-    app = tk.Tk(); app.withdraw(); app.attributes('-topmost', True)
-    try:
-        if kind == 'folder':
-            result = filedialog.askdirectory(title='Choose where Video Tools saves downloads', parent=app)
-        else:
-            result = filedialog.askopenfilename(title='Choose a Netscape cookies file (optional)', parent=app,
-                                               filetypes=[('Cookie files','*.txt'),('All files','*.*')])
-    finally:
-        app.destroy()
+    import base64
+    powershell=str(Path(os.environ.get('SystemRoot',r'C:\Windows'))/'System32'/'WindowsPowerShell'/'v1.0'/'powershell.exe')
+    dialog=subprocess.run([powershell,'-NoProfile','-STA','-ExecutionPolicy','Bypass',
+        '-File',str(ROOT/'tools'/'pick-path.ps1'),kind],capture_output=True,text=True,
+        timeout=180,creationflags=subprocess.CREATE_NO_WINDOW)
+    if dialog.returncode: raise RuntimeError('The file chooser could not be opened.')
+    result=base64.b64decode(dialog.stdout.strip()).decode('utf-8') if dialog.stdout.strip() else ''
     if result:
         cfg = config(); cfg['output' if kind == 'folder' else 'cookies'] = str(Path(result).resolve())
         write_json(CONFIG, cfg)
@@ -60,8 +56,9 @@ def picker(kind):
 def health():
     import yt_dlp.version
     cfg = config()
-    return { 'version':'1.0.0', 'output': cfg['output'], 'cookies':bool(cfg['cookies']),
-             'youtube': (Path(cfg['youtube_root']) / 'yt.py').is_file(),
+    return { 'version':'1.1.0', 'output': cfg['output'], 'cookies':bool(cfg['cookies']),
+             'youtube': (ROOT/'host'/'transcripts.py').is_file(),
+             'portable':Path(sys.executable).is_relative_to(ROOT/'runtime'),
              'ffmpeg':bool(shutil.which('ffmpeg') and shutil.which('ffprobe')),
              'yt_dlp':yt_dlp.version.__version__, 'free_gb':round(shutil.disk_usage(ROOT).free/1024**3,1) }
 

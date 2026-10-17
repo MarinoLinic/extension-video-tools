@@ -11,7 +11,7 @@ import subprocess
 import sys
 import threading
 import time
-from common import ROOT, config, job_path, read_json, write_json, request_options, youtube_url
+from common import ROOT, config, job_path, read_json, write_json, request_options
 
 class Cancelled(Exception): pass
 
@@ -81,57 +81,11 @@ class Worker:
         finally:
             proc.stdout.close()
 
-    def youtube(self, stage):
-        script=Path(self.cfg['youtube_root'])/'yt.py'
-        if not script.is_file(): raise RuntimeError('YouTube Tools was not found. Run Setup.cmd after placing it in projects-python/youtube_tools.')
+    def media(self, stage):
         opts=self.options
-        cmd=[sys.executable,'-X','utf8',str(script),opts['mode'],opts['url'],'-o',str(stage),
-             '--playlist','no','--print-json','--languages',opts['languages']]
-        if self.cfg['cookies']: cmd+=['--cookies',self.cfg['cookies']]
-        if opts['start'] or opts['end'] is not None:
-            cmd+=['--start',str(opts['start'])]
-            if opts['end'] is not None: cmd+=['--end',str(opts['end'])]
-        if opts['mode']=='video':
-            cmd+=['--max-height',str(opts['height']),'--codec','best']
-            if opts['accurate']: cmd+=['--accurate-cuts']
-        elif opts['mode']=='audio': cmd+=['--no-embed-thumbnail']
-        output=self.run_process(cmd)
-        summary=next((json.loads(line) for line in reversed(output.splitlines()) if line.startswith('{"exit_code"')),None)
-        if not summary: raise RuntimeError('YouTube Tools returned no download summary.')
-        results=summary.get('results',[])
-        if summary.get('exit_code') or not results: raise RuntimeError(str(results[-1].get('error','Download failed.')) if results else 'No video returned.')
-        return [Path(p) for item in results for p in item.get('files',[])]
-
-    def generic_transcript(self, stage):
-        # Reuse the maintained caption parser; only metadata/URL formatting differs for other sites.
-        sys.path.insert(0,self.cfg['youtube_root'])
-        from youtube_tools.captions import caption_candidates, parse_captions, markdown
-        import yt_dlp
-        opts=self.options
-        settings=dict(quiet=True,no_warnings=True,noplaylist=True,socket_timeout=20,retries=1)
-        if self.cfg['cookies']: settings['cookiefile']=self.cfg['cookies']
-        with yt_dlp.YoutubeDL(settings) as ydl:
-            info=ydl.extract_info(opts['url'],download=False)
-            if not info or 'entries' in info: raise RuntimeError('Choose an individual video.')
-            for language,source,track in caption_candidates(info,tuple(opts['languages'].split(',')),'prefer-manual'):
-                self.check_cancel()
-                with ydl.urlopen(track['url']) as response:
-                    raw=response.read(8*1024*1024+1)
-                if len(raw)>8*1024*1024: continue
-                segments=parse_captions(raw.decode('utf-8-sig'),track.get('ext',''))
-                segments=[s for s in segments if (s.start+s.duration>opts['start'] or s.start>=opts['start']) and (opts['end'] is None or s.start<opts['end'])]
-                if not segments: continue
-                meta=dict(title=info.get('title') or 'Transcript',url=opts['url'],language=language,
-                    transcript_source=source,selection={'start':opts['start'],'end':opts['end']},
-                    selection_boundary='Whole overlapping cues; times remain relative to the original video.')
-                stem=re.sub(r'[<>:"/\\|?*\x00-\x1f]','_',meta['title'])[:100].rstrip(' .') or 'Transcript'
-                path=stage/(stem+'.md'); path.write_text(markdown(meta,segments),encoding='utf-8')
-                return [path]
-        raise RuntimeError('No usable captions were found for the selected language and time range. Speech recognition was not performed.')
-
-    def generic(self, stage):
-        opts=self.options
-        if opts['mode']=='transcript': return self.generic_transcript(stage)
+        if opts['mode']=='transcript':
+            output=self.run_process([sys.executable,'-X','utf8',str(ROOT/'host'/'transcripts.py'),str(self.folder/'request.json'),str(stage)])
+            return [Path(line.split('VIDEO_TOOLS_FILE:',1)[1]) for line in output.splitlines() if line.startswith('VIDEO_TOOLS_FILE:')]
         selection=''
         if opts['start'] or opts['end'] is not None:
             end=f"{opts['end']:g}s" if opts['end'] is not None else 'end'
@@ -140,8 +94,9 @@ class Worker:
              '--windows-filenames','--newline','--progress','--socket-timeout','20','--retries','2',
              '--match-filter','!is_live',
              '-o',str(stage/('%(title).100B [%(id).60B]'+selection+'.%(ext)s')), '--print','after_move:VIDEO_TOOLS_FILE:%(filepath)s']
+        if shutil.which('node'): cmd+=['--js-runtimes','node:'+shutil.which('node')]
         if self.cfg['cookies']: cmd+=['--cookies',self.cfg['cookies']]
-        if opts['mode']=='audio': cmd+=['-f','bestaudio/best','-x','--audio-format','mp3','--audio-quality','0']
+        if opts['mode']=='audio': cmd+=['-f','bestaudio[ext=m4a]/bestaudio/best','-x','--audio-format','mp3','--audio-quality','0']
         else:
             ceiling=f"[height<=?{opts['height']}]"
             cmd+=['-f',f'bv*{ceiling}+ba/b{ceiling}','-S','vcodec:h264,acodec:aac',
@@ -184,7 +139,7 @@ class Worker:
             dest=Path(self.cfg['output']).expanduser().resolve(); dest.mkdir(parents=True,exist_ok=True)
             if shutil.disk_usage(dest).free<512*1024*1024: raise RuntimeError('Less than 512 MB is free on the destination drive. Choose another folder.')
             stage=dest/'.video-tools-work'/self.folder.name; stage.mkdir(parents=True,exist_ok=True)
-            files=self.youtube(stage) if youtube_url(self.options['url']) else self.generic(stage)
+            files=self.media(stage)
             self.check_cancel()
             if not files: raise RuntimeError('The downloader produced no files.')
             for path in files:

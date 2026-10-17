@@ -7,7 +7,7 @@ class Launcher {
   static int Main(string[] args) {
     try {
       string root = Directory.GetParent(AppDomain.CurrentDomain.BaseDirectory.TrimEnd(Path.DirectorySeparatorChar)).FullName;
-      var start = new ProcessStartInfo(Path.Combine(root, ".local", "runtime", "Scripts", "python.exe"),
+      var start = new ProcessStartInfo(Path.Combine(root, "runtime", "python", "python.exe"),
         "-X utf8 -u \"" + Path.Combine(root, "host", "native_host.py") + "\"");
       start.UseShellExecute = false; start.CreateNoWindow = true;
       start.RedirectStandardInput = true; start.RedirectStandardOutput = true;

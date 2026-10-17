@@ -1,6 +1,6 @@
 # Verification — 17 October 2026
 
-Windows, Brave, Python 3.12, yt-dlp 2026.08.19 and the existing YouTube Tools source. No browser-profile cookies were read or used. QA used an isolated browser profile and files under `C:\Users\marin\agent-files\trash\extension-video-tools-qa-20261017`.
+Windows, Brave, the project-local Python runtime and yt-dlp 2026.08.19. No browser-profile cookies were read or used. QA used an isolated browser profile and files under `C:\Users\marin\agent-files\trash\extension-video-tools-qa-20261017`.
 
 ## Automated checks
 
@@ -28,4 +28,4 @@ Every media result passed FFprobe stream/duration checks. Exact cuts are limited
 
 Provider variability was also observed: yt-dlp's old `BaW_jenozKc` YouTube example was unavailable, one old X amplify example returned a provider error, and one old Facebook example failed extraction. Other public examples above worked. These checks establish working paths, not universal support for every post, privacy setting or future site version. Authenticated downloads and native folder/cookies dialogs were not exercised with real user data.
 
-Setup created this application's three per-user native-host registrations and an isolated local Python environment. Existing sibling source projects and their environments were not modified. Default output is restored to `~/Videos/Video Tools`; QA jobs are archived in the QA folder rather than shown as the user's download history.
+Setup created this application's three per-user native-host registrations and an isolated local Python environment. All download and transcript code is shipped in this project. Default output is restored to `~/Videos/Video Tools`; QA jobs are archived in the QA folder rather than shown as the user's download history.

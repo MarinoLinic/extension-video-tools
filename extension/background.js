@@ -47,5 +47,5 @@ chrome.contextMenus.onClicked.addListener(async(info)=>{
   const url=info.linkUrl || (isWebUrl(info.srcUrl) ? info.srcUrl : info.pageUrl);
   if (!isWebUrl(url)) return;
   await chrome.storage.session.set({pendingUrl:url});
-  await chrome.windows.create({url:chrome.runtime.getURL('popup.html?window=1'),type:'popup',width:480,height:800});
+  await chrome.windows.create({url:chrome.runtime.getURL('extension/popup.html?window=1'),type:'popup',width:480,height:800});
 });
