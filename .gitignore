@@ -1,0 +1,7 @@
+.local/
+exports/
+__pycache__/
+*.pyc
+node_modules/
+*.zip
+*.log

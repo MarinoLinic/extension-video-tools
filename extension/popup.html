@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Video Tools</title><link rel="stylesheet" href="popup.css"></head>
+<body>
+<header><a class="brand" href="popup.html" aria-label="Video Tools home"><span class="brand-icon" aria-hidden="true">↓</span><span>Video Tools</span></a><div class="header-actions"><button id="expand" class="icon" title="Open a larger window" aria-label="Open a larger window">↗</button><button id="settingsToggle" class="icon" title="Settings" aria-label="Settings" aria-expanded="false">⚙</button></div></header>
+<main>
+  <div id="helperBanner" class="banner" hidden><strong>One quick setup</strong><p>Run <b>Setup.cmd</b> in the extension-video-tools folder, then reconnect.</p><button id="reconnect">Reconnect</button><a href="help.html" target="_blank">Installation help ↗</a></div>
+  <section id="settingsPanel" class="settings" hidden aria-label="Settings">
+    <div class="section-label">DOWNLOAD SETTINGS</div>
+    <label>Video quality<select id="height"><option value="480">Up to 480p</option><option value="720">Up to 720p</option><option value="1080">Up to 1080p</option><option value="1440">Up to 1440p</option><option value="2160">Up to 4K</option><option value="4320">Best available (up to 8K)</option></select></label>
+    <label>Transcript languages<input id="languages" value="en" placeholder="en or hr,en" autocomplete="off"><small>Language codes, in order of preference.</small></label>
+    <label class="check"><input id="accurate" type="checkbox" checked><span>Precise video cuts<small>Re-encodes clips for accurate boundaries. Uses more time and CPU.</small></span></label>
+    <div class="folder-setting"><span>Save downloads to</span><p id="outputPath">Connecting…</p><button id="chooseFolder">Choose folder…</button></div>
+    <details><summary>Videos that require a login</summary><p>Optionally select an exported Netscape cookies file. It stays on this PC. yt-dlp may refresh the selected file. Your browser’s cookies are never read automatically.</p><div class="row"><button id="chooseCookies">Choose cookies file…</button><button id="clearCookies" hidden>Disconnect</button></div><small id="cookiesState">No cookies file selected.</small></details>
+    <p class="settings-note">Your format, quality and language choices are remembered. Clip boundaries belong to each video.</p>
+  </section>
+  <section class="source-section" aria-label="Video source">
+    <div class="section-line"><span class="section-label">CURRENT VIDEO</span><button class="text-button" id="rescan">Refresh page ↻</button></div>
+    <select id="sourceSelect" aria-label="Choose a video on this page" hidden></select>
+    <div class="source-card"><div class="play-icon" aria-hidden="true">▶</div><div class="source-text"><div id="sourceSite" class="eyebrow">FROM YOUR BROWSER</div><h1 id="sourceTitle">Choose a video to save</h1><p id="sourceMeta">Open a video, or paste a link below.</p></div></div>
+    <form id="urlForm" class="url-form"><input id="urlInput" type="url" aria-label="Video link" placeholder="Or paste a video link…" required><button id="inspect" type="submit">Load</button></form>
+    <p id="loading" class="muted" role="status" hidden>Reading video information…</p>
+  </section>
+  <section class="clip-section" aria-label="Select part of the video">
+    <div class="section-line"><span class="section-label">CHOOSE YOUR CLIP</span><button id="reset" class="text-button">Full video</button></div>
+    <div class="clip-summary"><strong id="clipLength">Full video</strong><span id="clipLabel">Everything, or just the good part.</span></div>
+    <div class="timeline" id="timeline"><div class="track"></div><div class="selected-track" id="selectedTrack"></div><input id="rangeStart" type="range" min="0" max="100" value="0" step="0.1" aria-label="Clip start" disabled><input id="rangeEnd" type="range" min="0" max="100" value="100" step="0.1" aria-label="Clip end" disabled></div>
+    <div class="timeline-labels"><span id="scaleStart">0:00</span><div><button id="zoomIn" class="text-button" title="Zoom timeline around selected range">Zoom in +</button><button id="zoomOut" class="text-button" hidden>Show all</button></div><span id="scaleEnd">—</span></div>
+    <div class="time-fields">
+      <div><label for="startTime">Start</label><div class="time-input"><input id="startTime" value="0:00" spellcheck="false" inputmode="decimal" aria-describedby="timeHint"><button data-nudge="start:-1" title="Start one second earlier" aria-label="Start one second earlier">−</button><button data-nudge="start:1" title="Start one second later" aria-label="Start one second later">+</button></div><button class="text-button current-time" data-current="start">Use player time</button></div>
+      <div><label for="endTime">End</label><div class="time-input"><input id="endTime" placeholder="End of video" spellcheck="false" inputmode="decimal" aria-describedby="timeHint"><button data-nudge="end:-1" title="End one second earlier" aria-label="End one second earlier">−</button><button data-nudge="end:1" title="End one second later" aria-label="End one second later">+</button></div><button class="text-button current-time" data-current="end">Use player time</button></div>
+    </div>
+    <p id="timeHint" class="hint">Times: 2:50 or 1:02:50.250 · ±1s (Alt: 0.1s, Shift: 10s)</p>
+    <button id="preview" class="preview-button" disabled>▶ Preview from start in the page</button>
+  </section>
+  <p id="error" class="error" role="alert" hidden></p>
+  <div class="download-area"><div class="split-button"><button id="download" disabled><span aria-hidden="true">↓</span> <span id="downloadLabel">Download video</span></button><button id="formatToggle" aria-label="Choose download format" aria-haspopup="menu" aria-expanded="false">⌄</button></div>
+    <div id="formatMenu" class="format-menu" role="menu" hidden><button role="menuitemradio" data-mode="video" aria-checked="true"><strong>Video</strong><small>MP4 · with audio when available</small><span>✓</span></button><button role="menuitemradio" data-mode="audio" aria-checked="false"><strong>Audio</strong><small>MP3 · audio only</small><span>✓</span></button><button role="menuitemradio" data-mode="transcript" aria-checked="false"><strong>Transcript</strong><small>Markdown · existing captions</small><span>✓</span></button></div>
+    <p id="downloadHint" class="hint center">Saved on your PC. You can close this popup after starting.</p>
+  </div>
+  <section class="jobs-section" aria-label="Recent downloads"><div class="section-line"><span class="section-label">RECENT DOWNLOADS</span><span id="jobCount" class="muted"></span></div><div id="jobs"><p class="empty">Your downloads will appear here.</p></div></section>
+</main>
+<footer><span id="connection" class="connection">Connecting to helper…</span><a href="help.html" target="_blank">Help ↗</a></footer>
+<script type="module" src="popup.js"></script>
+</body></html>
