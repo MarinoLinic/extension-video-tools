@@ -17,8 +17,16 @@ export function scanMedia() {
     const article = video.closest('article,[role="article"]');
     if (/(^|\.)(x|twitter)\.com$/.test(site)) {
       url = article?.querySelector('a[href*="/status/"] time')?.closest('a')?.href || article?.querySelector('a[href*="/status/"]')?.href;
-      // Multiple attachments belong to separate tweet media indexes.
-      if (url && article) { const local=[...article.querySelectorAll('video')].indexOf(video); url=url.replace(/\/(?:video|photo)\/\d+.*$/,'') + `/video/${local+1}`; }
+      // A single player may be an X card, which has no /video/1 attachment.
+      // Preserve explicit attachment links; synthesize indexes only for multiple players.
+      if (url && article) {
+        const post=new URL(url);post.pathname=post.pathname.replace(/\/(?:video|photo)\/\d+\/?$/,'');post.search='';post.hash='';
+        const players=[...article.querySelectorAll('video')];
+        const attachment=video.closest('a[href*="/video/"]');
+        const explicit=attachment && new URL(attachment.href);
+        if(explicit && explicit.origin===post.origin && explicit.pathname.startsWith(post.pathname+'/video/'))url=explicit.href;
+        else url=post.href+(players.length>1?`/video/${players.indexOf(video)+1}`:'');
+      }
     } else if (/(^|\.)(facebook\.com|fb\.watch)$/.test(site)) {
       url = article?.querySelector('a[href*="/videos/"],a[href*="/reel/"],a[href*="watch?v="],a[href*="story_fbid="]')?.href;
       if (!url && /\/videos\/|\/reel\/|[?&]v=/.test(location.href)) url=location.href;
@@ -28,7 +36,7 @@ export function scanMedia() {
     const title = article?.querySelector('[data-testid="tweetText"]')?.textContent?.trim().slice(0,160) || video.getAttribute('aria-label') || og || document.title;
     if (url) result.push({url,title,duration:Number.isFinite(video.duration) ? video.duration : null,
       currentTime:video.currentTime || 0,index,kind:url===src ? 'media':'page',playing:!video.paused});
-    if (url && url!==src && /^https?:/.test(src || '')) result.push({url:src,title:`${title} · direct media`,
+    if (url && url!==src && /^https?:/.test(src || '')) result.push({url:src,pageUrl:url,title:`${title} · direct media`,
       duration:Number.isFinite(video.duration)?video.duration:null,currentTime:video.currentTime || 0,index,kind:'media',playing:!video.paused});
   }
   // Facebook can expose progressive files in its rendered JSON even when the player uses a blob.
@@ -50,7 +58,7 @@ export function scanMedia() {
         const selected=wanted.get(id) || (isVideo && id && !wanted.has(id)?null:match);
         if(selected){
           for(const [field,label] of [['browser_native_hd_url','direct HD'],['browser_native_sd_url','direct SD'],['playable_url_quality_hd','direct HD'],['playable_url','direct SD'],['progressive_url','direct MP4']]){
-            const url=mediaUrl(node[field]);if(url && !seen.has(url)){seen.add(url);result.push({...selected,url,title:`${selected.title} · ${label}`,kind:'media'});}
+            const url=mediaUrl(node[field]);if(url && !seen.has(url)){seen.add(url);result.push({...selected,pageUrl:selected.url,url,title:`${selected.title} · ${label}`,kind:'media'});}
           }
         }
         for(const [key,value] of Object.entries(node))if(value && typeof value==='object' && !['feedback','comments','replies','recommended_videos'].includes(key))stack.push({node:value,match:selected});
@@ -62,7 +70,7 @@ export function scanMedia() {
     result.push({url:location.href,title:og || document.title,duration:Number.isFinite(video?.duration)?video.duration:null,
       currentTime:video?.currentTime || 0,index:elements.indexOf(video),kind:'page',playing:video?!video.paused:false});
   }
-  return result.slice(0,30);
+  return result.slice(0,30).map(item=>({...item,pageUrl:item.pageUrl || (item.kind==='page'?item.url:location.href)}));
 }
 
 export function controlMedia(index, time, play = false) {

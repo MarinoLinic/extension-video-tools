@@ -105,7 +105,8 @@ async function scan() {
   let frames=[];
   try { frames=await chrome.scripting.executeScript({target:{tabId:tab.id,allFrames:true},func:scanMedia}); }
   catch { frames=[]; }
-  sources=frames.flatMap(frame=>(frame.result || []).map(item=>({...item,tabId:tab.id,frameId:frame.frameId})));
+  sources=frames.flatMap(frame=>(frame.result || []).map(item=>({...item,
+    pageUrl:frame.frameId!==0?tab.url:item.pageUrl || item.url,tabId:tab.id,frameId:frame.frameId})));
   // Favor the playing video and named media over a generic page fallback from an iframe.
   sources.sort((a,b)=>Number(b.playing)-Number(a.playing) || Number(b.index>=0)-Number(a.index>=0));
   const unique=new Map(); for (const item of sources) if (!unique.has(item.url)) unique.set(item.url,item);
@@ -140,8 +141,18 @@ function renderJobs(items) {
   const serialized=JSON.stringify(items); if (serialized===jobCache) return;jobCache=serialized;
   const root=$('jobs');root.replaceChildren();
   $('jobCount').textContent=items.length?String(items.length):'';
+  const activeItems=items.filter(job=>['queued','running','cancelling'].includes(job.state));
+  $('clearHistory').disabled=!items.some(job=>!activeItems.includes(job));
+  const summary=$('activeDownloads'); summary.hidden=!activeItems.length; summary.replaceChildren();
+  for(const job of activeItems) {
+    const percent=Number.isFinite(job.percent)?` · ${Math.round(job.percent)}%`:'';
+    summary.append(element('p','',`${job.title || 'Video'} · ${job.message || job.state}${percent}`));
+    const progress=element('progress');progress.max=100;
+    if(Number.isFinite(job.percent))progress.value=job.percent;
+    progress.setAttribute('aria-label',`Download progress for ${job.title || 'Video'}`);summary.append(progress);
+  }
   if (!items.length) {root.append(element('p','empty','Your downloads will appear here.'));return;}
-  for (const job of items.slice(0,8)) {
+  for (const job of [...activeItems,...items.filter(job=>!activeItems.includes(job))].slice(0,8)) {
     const card=element('div',`job ${job.state}`);card.dataset.job=job.id;const title=element('div','job-title');
     title.append(element('strong','',job.title || 'Video'),element('span','',job.state));card.append(title);
     const active=['queued','running','cancelling'].includes(job.state);
@@ -186,6 +197,11 @@ $('reconnect').addEventListener('click',safe(async()=>{await connect();if(helper
 $('chooseFolder').addEventListener('click',safe(async()=>renderHelper(await rpc('pick_folder'))));
 $('chooseCookies').addEventListener('click',safe(async()=>renderHelper(await rpc('pick_cookies'))));
 $('clearCookies').addEventListener('click',safe(async()=>renderHelper(await rpc('clear_cookies'))));
+$('clearHistory').addEventListener('click',safe(async()=>{
+  $('clearHistory').disabled=true;
+  try {await rpc('clear_history');await refreshJobs(true);}
+  finally {if(jobCache){const items=JSON.parse(jobCache);jobCache='';renderJobs(items);}}
+}));
 $('rescan').addEventListener('click',safe(scan));
 $('sourceSelect').addEventListener('change',safe(()=>setSource(sources[Number($('sourceSelect').value)])));
 $('urlForm').addEventListener('submit',event=>{event.preventDefault();safe(async()=>{const url=$('urlInput').value.trim();if(!isWebUrl(url))throw new Error('Paste a complete HTTP or HTTPS video link.');await setSource({url,title:new URL(url).hostname,duration:null,index:-1});})();});
@@ -229,8 +245,9 @@ async function init() {
   const params=new URLSearchParams(location.search);
   if(params.has('settings')){$('settingsPanel').hidden=false;$('settingsToggle').setAttribute('aria-expanded','true');}
   await connect();
-  const {pendingUrl}=await chrome.storage.session.get('pendingUrl');
-  if(pendingUrl){await chrome.storage.session.remove('pendingUrl');await setSource({url:pendingUrl,title:new URL(pendingUrl).hostname,duration:null,index:-1});}
+  await refreshJobs();
+  const {pendingUrl,pendingPageUrl}=await chrome.storage.session.get(['pendingUrl','pendingPageUrl']);
+  if(pendingUrl){await chrome.storage.session.remove(['pendingUrl','pendingPageUrl']);await setSource({url:pendingUrl,pageUrl:pendingPageUrl,title:new URL(pendingUrl).hostname,duration:null,index:-1});}
   else await scan();
   await refreshJobs();setInterval(()=>{if(!document.hidden)refreshJobs();},1800);
 }

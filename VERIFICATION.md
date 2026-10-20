@@ -1,4 +1,23 @@
-# Verification — 17 October 2026
+# Verification — 18 October 2026
+
+## Popup, progress, history and provenance
+
+- X card follow-up: reproduced `Video #1 is unavailable` for post `2105253451446038779/video/1`; the original post resolves to its 21.999-second card video. Scanner now leaves single-player posts unnumbered and preserves explicit indexes. A narrowly guarded fallback repairs older first-attachment requests; it rejects multi-video results and does not mask login errors or change another selected attachment number.
+- Against a truly isolated companion with its own embedded interpreter, both metadata inspection and a native-worker retry recovered that exact old indexed request without cookies. A requested 0–2.5-second clip completed as an MP4 of 2.503756 seconds; FFprobe confirmed video and corrected post/source metadata. Page fixtures cover single-player cards, multiple players and explicit mixed-media attachment links. Twelve Python and five JavaScript tests pass.
+- QA isolation correction: a junction of the entire runtime can make embedded Python import the development checkout's `host/common.py`. The final companion check uses copied interpreter files and shares only packages/external tools. Browser smoke now requires a QA destination and refuses non-QA saved paths before history clearing.
+- Final isolated Brave smoke passed with those guards enabled, including native download continuation, source tags and safe history clearing; its 440 × 600 popup capture was inspected. All three application-specific browser host registrations were restored. Brave can consult Chrome's native-host registration, so a Brave-only registry override is insufficient for isolation.
+
+- Follow-up: the actual toolbar surface exposed a sizing loop from `body { max-height:100vh }`: it settled at 218 CSS pixels, leaving only 20 pixels for the main controls. Removed that viewport-relative cap. A headed Brave toolbar test (`tests/toolbar-popup.cjs`, `viewport:null`, `chrome.action.openPopup`) now verifies 600 pixels overall, 402 pixels for the main panel at the tested scale, scrollable Settings/history, and the complete Download button. Its screenshot was visually inspected. Earlier fixed-viewport screenshots did not cover this auto-sizing behavior.
+
+- Five JavaScript tests and eleven Python host tests pass, along with `npm run check`. Background coverage includes two concurrent jobs, monitoring without a popup, clearing the badge at completion, browser-startup recovery and refusal of web-page helper requests.
+- History tests cover completed/failed/cancelled entries, active and queued jobs, unresponsive workers that resume, and preservation of saved files and helper records.
+- FFmpeg/FFprobe fixtures confirm that MP4 and MP3 retain author/title tags and embed distinct post, selected-source and video/audio stream URLs. A caption fixture verifies the corresponding Markdown front matter.
+- Isolated Brave smoke test passed against a separate QA companion and destination under `C:\Users\marin\agent-files\trash\video-tools-qa-20261018`. The application's Brave native-host registration was restored afterward; real settings, history and saved files were not used for these history-clearing checks.
+- The complete Download button fits at 440 × 600, including while Settings is open or the main panel is scrolled. Popup and active-progress screenshots were visually inspected. Chrome's toolbar popup height limit is 600 pixels, so the main panel scrolls and the action stays fixed below it.
+- Actual native download completed after the popup closed. The toolbar badge showed `1` while active and cleared at completion. FFprobe confirmed source tags in the downloaded MP4. Clearing history removed the entry after reopening the popup and preserved the media file.
+- Page fixtures for YouTube, X attachments, Facebook selected-video matching and generic media passed; generic direct media retained its containing page URL. No new authenticated or live social-provider checks were performed in this update.
+- Native companion jobs remain outside the browser's Downloads list. The extension uses its own toolbar badge and popup progress. New `alarms` permission supports progress recovery; no downloads, cookies or persistent site-access permission was added.
+- Source links can include expiring signed URLs. Clearing the extension list hides helper records rather than deleting diagnostic folders. Existing media files receive no retroactive metadata changes.
 
 ## Recent-download actions
 

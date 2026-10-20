@@ -12,6 +12,8 @@ import sys
 import threading
 import time
 from common import ROOT, config, job_path, read_json, write_json, request_options
+from provenance import source_metadata, media_tags
+from sources import x_card_fallback_url
 
 class Cancelled(Exception): pass
 
@@ -22,6 +24,7 @@ class Worker:
         self.options=request_options(self.request)
         self.cfg=config(); self.lines=[]; self.percent=None; self.files=[]
         self.state='running'; self.message='Reading video information…'; self.last_write=0
+        self.source_info={}; self.media_urls=[]
 
     def status(self, message=None, force=False):
         if message: self.message=message
@@ -57,7 +60,7 @@ class Worker:
                 if line:
                     # Bound retained output; do not expose signed media links in the popup.
                     if length<4*1024*1024: output.append(line); length+=len(line)
-                    if capture_only or line.startswith('{"exit_code"'): continue
+                    if capture_only or line.startswith(('{"exit_code"','VIDEO_TOOLS_')): continue
                     safe=re.sub(r'https?://\S+','[media link]',line)
                     if self.cfg.get('cookies'): safe=safe.replace(self.cfg['cookies'],'[cookies file]')
                     self.lines.append(safe[:500]); self.lines=self.lines[-30:]
@@ -94,6 +97,8 @@ class Worker:
              '--windows-filenames','--newline','--progress','--socket-timeout','20','--retries','2',
              '--match-filter','!is_live',
              '-o',str(stage/('%(title).100B [%(id).60B]'+selection+'.%(ext)s')), '--print','after_move:VIDEO_TOOLS_FILE:%(filepath)s']
+        cmd+=['--embed-metadata','--print','before_dl:VIDEO_TOOLS_META:%(.{webpage_url,url})j',
+              '--print','before_dl:VIDEO_TOOLS_URLS:%(requested_formats.:.url)j']
         if shutil.which('node'): cmd+=['--js-runtimes','node:'+shutil.which('node')]
         if self.cfg['cookies']: cmd+=['--cookies',self.cfg['cookies']]
         if opts['mode']=='audio': cmd+=['-f','bestaudio[ext=m4a]/bestaudio/best','-x','--audio-format','mp3','--audio-quality','0']
@@ -106,8 +111,40 @@ class Worker:
             cmd+=['--download-sections',f"*{opts['start']}-{end}"]
             if opts['mode']=='video' and opts['accurate']: cmd+=['--force-keyframes-at-cuts']
         cmd+=['--',opts['url']]
-        output=self.run_process(cmd)
+        try: output=self.run_process(cmd)
+        except RuntimeError as error:
+            fallback=x_card_fallback_url(opts['url'],error)
+            if not fallback: raise
+            self.check_cancel()
+            from native_host import inspect_video
+            # Inspect rejects multi-video results before a fallback can download anything.
+            metadata=inspect_video({'url':fallback})
+            if opts.get('page_url')==opts['url']: opts['page_url']=metadata['url']
+            opts['url']=metadata['url'];cmd[-1]=opts['url']
+            self.message='Retrying the original X post link…';self.status(force=True)
+            output=self.run_process(cmd)
+        for line in output.splitlines():
+            if line.startswith('VIDEO_TOOLS_META:'):
+                self.source_info=json.loads(line.split(':',1)[1])
+                if self.source_info.get('url'): self.media_urls.append(self.source_info['url'])
+            elif line.startswith('VIDEO_TOOLS_URLS:'):
+                urls=json.loads(line.split(':',1)[1])
+                if isinstance(urls,list): self.media_urls.extend(urls)
         return [Path(line.split('VIDEO_TOOLS_FILE:',1)[1]) for line in output.splitlines() if line.startswith('VIDEO_TOOLS_FILE:')]
+
+    def embed_sources(self,path):
+        record=source_metadata(self.options,self.source_info,self.media_urls)
+        tagged=path.parent/'tagged';tagged.mkdir(exist_ok=True)
+        target=tagged/path.name
+        command=[shutil.which('ffmpeg'),'-nostdin','-v','error','-n','-i',str(path),
+                 '-map','0','-c','copy','-map_metadata','0']
+        for key,value in media_tags(record).items(): command+=['-metadata',f'{key}={value}']
+        if path.suffix.lower()=='.mp4': command+=['-movflags','use_metadata_tags+faststart']
+        elif path.suffix.lower()=='.mp3': command+=['-id3v2_version','3']
+        command.append(str(target))
+        self.message='Saving source links…';self.percent=None;self.status(force=True)
+        self.run_process(command)
+        return target
 
     def validate_media(self, path):
         output=self.run_process([shutil.which('ffprobe'),'-v','error','-show_entries',
@@ -142,12 +179,17 @@ class Worker:
             files=self.media(stage)
             self.check_cancel()
             if not files: raise RuntimeError('The downloader produced no files.')
-            for path in files:
+            for index,path in enumerate(files):
                 path=path.resolve()
                 if not path.is_relative_to(stage) or not path.is_file() or path.stat().st_size==0:
                     raise RuntimeError('The downloader did not produce a valid staged file.')
                 self.message='Checking saved file…'; self.percent=None; self.status(force=True)
-                if path.suffix.lower()!='.md': self.validate_media(path)
+                if path.suffix.lower()!='.md':
+                    tagged=self.embed_sources(path)
+                    self.validate_media(tagged)
+                    # Replace only this job's generated staging file after validation.
+                    # Failed tagging keeps both artifacts for inspection.
+                    tagged.replace(path);files[index]=path
             self.check_cancel()
             for path in files:
                 # Unique suffix plus Windows exclusive rename preserves every existing output.

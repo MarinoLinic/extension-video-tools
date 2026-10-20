@@ -8,7 +8,8 @@ import subprocess
 import sys
 import time
 import uuid
-from common import ROOT, STATE, JOBS, CONFIG, config, jobs, job_path, read_json, write_json, request_options, validate_url, MAX_JOBS
+from common import ROOT, STATE, JOBS, CONFIG, config, jobs, clear_history, job_path, read_json, write_json, request_options, validate_url, MAX_JOBS
+from sources import extract_single_video
 
 def inspect_video(data):
     import yt_dlp
@@ -20,9 +21,7 @@ def inspect_video(data):
     if cfg['cookies']:
         options['cookiefile'] = cfg['cookies']
     with yt_dlp.YoutubeDL(options) as ydl:
-        info = ydl.extract_info(url, download=False)
-    if not info or info.get('_type') in ('playlist', 'multi_video') or 'entries' in info:
-        raise ValueError('Open the individual video or choose a detected media item.')
+        info,url = extract_single_video(ydl,url)
     if info.get('is_live') or info.get('live_status') in ('is_live','is_upcoming'):
         raise ValueError('Live streams can be downloaded after they have finished.')
     duration=info.get('duration')
@@ -69,6 +68,7 @@ def dispatch(data):
     if action == 'health': return health()
     if action == 'inspect': return inspect_video(data)
     if action == 'jobs': return jobs()[:50]
+    if action == 'clear_history': return clear_history()
     if action == 'pick_folder': return picker('folder')
     if action == 'pick_cookies': return picker('cookies')
     if action == 'clear_cookies':

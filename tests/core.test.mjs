@@ -18,3 +18,8 @@ test('a full-length selection stays a full download and ignores playlist/timesta
   assert.equal(clipRequest({url:'https://example.com/v',duration:7200},{start:170.25,end:180.75},DEFAULTS).start,170.25);
   assert.throws(()=>clipRequest({url:'file:///secret'},{start:0,end:null},DEFAULTS));
 });
+test('a detected direct video retains the containing post URL',()=>{
+  const request=clipRequest({url:'https://cdn.example.com/v.mp4?sig=123',pageUrl:'https://example.com/posts/4'}, {start:0,end:null},DEFAULTS);
+  assert.equal(request.page_url,'https://example.com/posts/4');
+  assert.equal(request.url,'https://cdn.example.com/v.mp4?sig=123');
+});

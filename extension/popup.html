@@ -3,6 +3,7 @@
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Video Tools</title><link rel="stylesheet" href="popup.css"></head>
 <body>
 <header><a class="brand" href="popup.html" aria-label="Video Tools home"><span class="brand-icon" aria-hidden="true">↓</span><span>Video Tools</span></a><div class="header-actions"><button id="expand" class="icon" title="Open a larger window" aria-label="Open a larger window">↗</button><button id="settingsToggle" class="icon" title="Settings" aria-label="Settings" aria-expanded="false">⚙</button></div></header>
+<div id="activeDownloads" class="active-downloads" aria-label="Active downloads" hidden></div>
 <main>
   <div id="helperBanner" class="banner" hidden><strong>One quick setup</strong><p>Run <b>Setup.cmd</b> in the extension-video-tools folder, then reconnect.</p><button id="reconnect">Reconnect</button><a href="help.html" target="_blank">Installation help ↗</a></div>
   <section id="settingsPanel" class="settings" hidden aria-label="Settings">
@@ -34,12 +35,12 @@
     <button id="preview" class="preview-button" disabled>▶ Preview from start in the page</button>
   </section>
   <p id="error" class="error" role="alert" hidden></p>
+  <section class="jobs-section" aria-label="Recent downloads"><div class="section-line"><span class="section-label">RECENT DOWNLOADS</span><div class="row"><span id="jobCount" class="muted"></span><button id="clearHistory" class="text-button" title="Clear finished entries only. Saved files are kept." disabled>Clear history</button></div></div><div id="jobs"><p class="empty">Your downloads will appear here.</p></div></section>
+</main>
   <div class="download-area"><div class="split-button"><button id="download" disabled><span aria-hidden="true">↓</span> <span id="downloadLabel">Download video</span></button><button id="formatToggle" aria-label="Choose download format" aria-haspopup="menu" aria-expanded="false">⌄</button></div>
     <div id="formatMenu" class="format-menu" role="menu" hidden><button role="menuitemradio" data-mode="video" aria-checked="true"><strong>Video</strong><small>MP4 · with audio when available</small><span>✓</span></button><button role="menuitemradio" data-mode="audio" aria-checked="false"><strong>Audio</strong><small>MP3 · audio only</small><span>✓</span></button><button role="menuitemradio" data-mode="transcript" aria-checked="false"><strong>Transcript</strong><small>Markdown · existing captions</small><span>✓</span></button></div>
     <p id="downloadHint" class="hint center">Saved on your PC. You can close this popup after starting.</p>
   </div>
-  <section class="jobs-section" aria-label="Recent downloads"><div class="section-line"><span class="section-label">RECENT DOWNLOADS</span><span id="jobCount" class="muted"></span></div><div id="jobs"><p class="empty">Your downloads will appear here.</p></div></section>
-</main>
 <footer><span id="connection" class="connection">Connecting to helper…</span><a href="help.html" target="_blank">Help ↗</a></footer>
 <script type="module" src="popup.js"></script>
 </body></html>

@@ -8,6 +8,7 @@ import shutil
 import sys
 from common import config,read_json,request_options,youtube_url
 from captions import caption_candidates,parse_captions,markdown,matches
+from provenance import source_metadata
 
 def fetch_segments(ydl,info,options,cookies):
     from yt_dlp.networking import Request
@@ -63,6 +64,7 @@ def export_transcript(options,stage):
         language=language,transcript_source=source,
         selection={'start_seconds':options['start'],'end_seconds':options['end']},
         selection_boundary='Whole overlapping cues; times remain relative to the original video.')
+    meta.update(source_metadata(options,info,[info.get('url')]+[f.get('url') for f in info.get('requested_formats') or []]))
     stem=re.sub(r'[<>:"/\\|?*\x00-\x1f]','_',meta['title'])[:100].rstrip(' .') or 'Transcript'
     if re.fullmatch(r'(?i)(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])',stem): stem='_'+stem
     stage=Path(stage);stage.mkdir(parents=True,exist_ok=True)

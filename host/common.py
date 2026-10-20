@@ -100,7 +100,8 @@ def request_options(data):
     languages = data.get('languages', 'en')
     if not isinstance(languages, str) or not re.fullmatch(r'[A-Za-z0-9,*_-]{1,100}', languages):
         raise ValueError('Use language codes such as en or hr,en.')
-    return dict(url=url, mode=mode, start=start, end=end, height=height,
+    page_url = validate_url(data.get('page_url') or url)
+    return dict(url=url, page_url=page_url, mode=mode, start=start, end=end, height=height,
                 languages=languages, accurate=data.get('accurate', True) is True)
 
 def job_path(job_id):
@@ -117,7 +118,22 @@ def public_job(folder):
     return {**state, 'id': folder.name, 'mode': request.get('mode'),
             'title': request.get('title', 'Video'), 'start': request.get('start',0), 'end': request.get('end')}
 
-def jobs():
+def jobs(include_hidden=False):
     JOBS.mkdir(parents=True, exist_ok=True)
-    items=[public_job(p) for p in JOBS.iterdir() if p.is_dir() and re.fullmatch(r'[a-f0-9]{20}',p.name)]
+    items=[]
+    for folder in JOBS.iterdir():
+        if not folder.is_dir() or not re.fullmatch(r'[a-f0-9]{20}',folder.name): continue
+        job=public_job(folder)
+        if include_hidden or not (folder/'history-hidden.json').exists() or job.get('state') in ('queued','running','cancelling'):
+            items.append(job)
     return sorted(items,key=lambda item:item.get('created',0),reverse=True)
+
+def clear_history():
+    cleared=[]
+    for job in jobs(include_hidden=True):
+        folder=job_path(job['id'])
+        # A timed-out worker can be hidden too; jobs() shows it again if it resumes.
+        if job.get('state') in ('completed','failed','cancelled'):
+            write_json(folder/'history-hidden.json',{'cleared_at':time.time()})
+            cleared.append(job['id'])
+    return {'cleared':cleared}

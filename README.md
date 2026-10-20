@@ -31,6 +31,16 @@ The arrow beside Download chooses **Video**, **Audio** or **Transcript**. Your c
 
 The larger window is available from the arrow in the header. Downloads continue after the popup or browser closes. Recent jobs show progress, cancel and retry. Completed jobs have separate **Open file** and **Show in folder** actions. Up to two jobs run at once.
 
+The toolbar popup uses the browser's 600-pixel height limit. **Download** stays fixed at the bottom while the controls and recent list scroll. Active jobs also show progress below the header. The pinned extension icon shows the number of active jobs, with details in its tooltip; the count clears when all jobs finish. Progress is checked while the popup is closed and reconnects after browser startup. Downloads run through the native companion, so they do not appear in the browser's built-in Downloads list.
+
+**Clear history** removes completed, failed and cancelled entries from the extension list and removes their saved browser retry requests. Active downloads and saved files are preserved. The helper keeps local diagnostic records and partial artifacts; this button is not a secure purge of those records. A worker previously marked unresponsive reappears if it resumes.
+
+## Source links in saved files
+
+New MP4 and MP3 downloads embed the containing post/page link (`page_url`), selected download link (`source_url`), the provider's canonical video page when available (`webpage_url`), and extracted video/audio stream links (`media_urls`). Links are also repeated with readable labels in the Comment tag. Title, author and other available provider metadata are embedded too. Metadata is written with stream copying, without another media re-encode. Some file-properties panels do not display custom tags; a media metadata inspector can read them.
+
+Markdown transcripts include the same source fields in their front matter. A detected direct video retains its containing post link; a pasted direct file cannot reveal an unknown original post. Separate video/audio streams may have separate media URLs. Direct stream links can expire and may contain access tokens, which remain in the saved file's metadata when it is shared. Existing downloads are not modified.
+
 ## Formats and limits
 
 Video is saved as MP4 and audio as MP3. Precise video cuts re-encode by default; disabling them allows faster cuts near keyframes. Frame rate and audio packet boundaries can make the saved duration slightly different from the entered decimal value. Quality settings are ceilings, not upscaling.
@@ -38,6 +48,8 @@ Video is saved as MP4 and audio as MP3. Precise video cuts re-encode by default;
 Transcripts come from available captions, with manual captions preferred. They are Markdown, not generated summaries or speech recognition. Missing captions cause an error. A selected transcript keeps whole overlapping cues and original-video timing.
 
 YouTube, X, Facebook and many other sources are handled by the included yt-dlp package. The page scanner can also find ordinary media URLs and identity-matched Facebook progressive files. Support depends on the video, site behavior and access restrictions. DRM, unavailable/private content, live broadcasts, expired links and some blob streams are unsupported. Refresh a page before retrying an expired direct link. Open cross-origin embedded players on their own page if they cannot be detected.
+
+Single-player X posts use the original post link because promotional/card videos may not have a numbered attachment. Explicit attachment links and multiple-player selections keep their indexes. Older failed `/video/1` requests can recover from that specific missing-attachment error using the original post, only if it resolves to one video. Login errors and other attachment numbers do not trigger this fallback.
 
 Video links do not expand into playlists, and URL timestamp hints do not silently replace your chosen boundaries. Existing files are preserved. Downloads are staged under `.video-tools-work` in the destination, validated with FFprobe and published with unique names. Partial files remain after failure or cancellation; no automatic deletion is performed.
 
@@ -66,3 +78,7 @@ runtime\python\python.exe -X utf8 -m unittest discover -s tests -p test_host.py 
 ```
 
 Browser tests use an isolated Brave profile, Playwright and a dedicated QA destination. Network media tests are opt-in. [AGENTS.md](AGENTS.md) records maintenance boundaries; [VERIFICATION.md](VERIFICATION.md) records the checks and known limits.
+
+For an isolated companion, copy the embedded interpreter files into its own `runtime/python`; junctioning the entire runtime can resolve Python's relative `../../host` path back to the development checkout. Share only packages and external tools if needed. The browser smoke test checks the helper's destination before downloading or clearing history and refuses non-QA saved paths.
+
+Popup sizing changes also need `tests/toolbar-popup.cjs` with `VIDEO_TOOLS_PLAYWRIGHT` and `VIDEO_TOOLS_QA_DIR` set for the isolated test. It opens the real toolbar surface in a fresh Brave profile and closes that browser afterward. A fixed-size tab alone cannot verify Chromium's popup auto-sizing; avoid viewport-relative height caps on that surface.

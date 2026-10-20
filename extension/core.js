@@ -38,6 +38,6 @@ export function canonicalVideoUrl(value) {
 export function clipRequest(source, range, settings) {
   if (!isWebUrl(source?.url)) throw new Error('Choose a video or paste its link first.');
   if (!validRange(range.start, range.end, source.duration)) throw new Error('Enter a valid start and end within the video.');
-  return {url: source.url, title: source.title, ...settings, start: range.start,
+  return {url: source.url, page_url: source.pageUrl || source.url, title: source.title, ...settings, start: range.start,
     end: range.end !== null && Number.isFinite(source.duration) && Math.abs(range.end-source.duration)<.001 ? null : range.end};
 }
