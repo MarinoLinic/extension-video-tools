@@ -1,4 +1,10 @@
-# Verification — 18 October 2026
+# Verification — 23 October 2026
+
+## Quoted X videos
+
+- Local browser fixtures verify that an outer player and two nested quoted players retain separate post URLs, titles, and source links. Quoted players are excluded from the outer attachment count; existing explicit attachment indexes remain covered.
+- JavaScript checks and twelve Python host tests pass. The actual Brave toolbar popup was checked in an isolated profile at 440 × 600: Download remains visible and Settings scrolls.
+- These checks use synthetic site markup. No authenticated provider pages or new live downloads were tested in this review. The native helper and download pipeline were not changed.
 
 ## Popup, progress, history and provenance
 
@@ -65,3 +71,7 @@ Every media result passed FFprobe stream/duration checks. Exact cuts are limited
 Provider variability was also observed: yt-dlp's old `BaW_jenozKc` YouTube example was unavailable, one old X amplify example returned a provider error, and one old Facebook example failed extraction. Other public examples above worked. These checks establish working paths, not universal support for every post, privacy setting or future site version. Authenticated downloads and native folder/cookies dialogs were not exercised with real user data.
 
 Setup created this application's three per-user native-host registrations and an isolated local Python environment. All download and transcript code is shipped in this project. Default output is restored to `~/Videos/Video Tools`; QA jobs are archived in the QA folder rather than shown as the user's download history.
+
+## Pre-existing local changes reviewed: 8 November 2026
+
+The pending nested-quote player changes passed five JavaScript tests, twelve Python host tests, static checks and synthetic headless Brave page fixtures. This review made no native-helper or UI layout changes and did not repeat authenticated provider downloads or real toolbar/native-host setup checks. The standalone tools were moved; this self-contained extension and its registrations were left in place.

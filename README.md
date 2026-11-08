@@ -51,6 +51,8 @@ YouTube, X, Facebook and many other sources are handled by the included yt-dlp p
 
 Single-player X posts use the original post link because promotional/card videos may not have a numbered attachment. Explicit attachment links and multiple-player selections keep their indexes. Older failed `/video/1` requests can recover from that specific missing-attachment error using the original post, only if it resolves to one video. Login errors and other attachment numbers do not trigger this fallback.
 
+Videos inside rendered X quote cards keep the quoted post's link and title, including nested quotes. They do not count toward the outer post's attachment numbers. Detection still depends on the links and players exposed by the page.
+
 Video links do not expand into playlists, and URL timestamp hints do not silently replace your chosen boundaries. Existing files are preserved. Downloads are staged under `.video-tools-work` in the destination, validated with FFprobe and published with unique names. Partial files remain after failure or cancellation; no automatic deletion is performed.
 
 ## Privacy and local setup

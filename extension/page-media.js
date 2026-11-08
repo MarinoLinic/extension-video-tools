@@ -4,6 +4,14 @@ export function scanMedia() {
   const result = [];
   const og = document.querySelector('meta[property="og:title"]')?.content;
   const site = location.hostname;
+  // A quoted post owns its own players. Counting them as outer attachments can
+  // select a different video and attach the wrong source link to the download.
+  function postOwner(node, article) {
+    for (let parent=node?.parentElement;parent && parent!==article;parent=parent.parentElement) {
+      if (parent.matches('div[role="link"]') && parent.querySelector('[data-testid="User-Name"]')) return parent;
+    }
+    return article;
+  }
   const youtube = /(^|\.)youtube\.com$/.test(site) || site === 'youtu.be';
   if (youtube && /\/(watch|shorts\/|live\/)/.test(location.pathname)) {
     const video = document.querySelector('video');
@@ -15,13 +23,17 @@ export function scanMedia() {
   for (const [index, video] of elements.entries()) {
     let url = null;
     const article = video.closest('article,[role="article"]');
+    const owner = /(^|\.)(x|twitter)\.com$/.test(site) ? postOwner(video, article) : article;
     if (/(^|\.)(x|twitter)\.com$/.test(site)) {
-      url = article?.querySelector('a[href*="/status/"] time')?.closest('a')?.href || article?.querySelector('a[href*="/status/"]')?.href;
+      const ownStatus = [...(owner?.querySelectorAll('a[href*="/status/"]') || [])]
+        .filter(link=>postOwner(link,article)===owner);
+      url = ownStatus.find(link=>link.querySelector('time'))?.href || ownStatus[0]?.href ||
+        (owner?.getAttribute('href')?.includes('/status/') ? new URL(owner.getAttribute('href'),location.href).href : null);
       // A single player may be an X card, which has no /video/1 attachment.
       // Preserve explicit attachment links; synthesize indexes only for multiple players.
       if (url && article) {
         const post=new URL(url);post.pathname=post.pathname.replace(/\/(?:video|photo)\/\d+\/?$/,'');post.search='';post.hash='';
-        const players=[...article.querySelectorAll('video')];
+        const players=[...owner.querySelectorAll('video')].filter(player=>postOwner(player,article)===owner);
         const attachment=video.closest('a[href*="/video/"]');
         const explicit=attachment && new URL(attachment.href);
         if(explicit && explicit.origin===post.origin && explicit.pathname.startsWith(post.pathname+'/video/'))url=explicit.href;
@@ -33,7 +45,8 @@ export function scanMedia() {
     }
     const src = video.currentSrc || video.src || video.querySelector('source')?.src;
     if (!url && /^https?:/.test(src || '')) url=src;
-    const title = article?.querySelector('[data-testid="tweetText"]')?.textContent?.trim().slice(0,160) || video.getAttribute('aria-label') || og || document.title;
+    const title = [...(owner?.querySelectorAll('[data-testid="tweetText"]') || [])]
+      .find(node=>!/(^|\.)(x|twitter)\.com$/.test(site) || postOwner(node,article)===owner)?.textContent?.trim().slice(0,160) || video.getAttribute('aria-label') || og || document.title;
     if (url) result.push({url,title,duration:Number.isFinite(video.duration) ? video.duration : null,
       currentTime:video.currentTime || 0,index,kind:url===src ? 'media':'page',playing:!video.paused});
     if (url && url!==src && /^https?:/.test(src || '')) result.push({url:src,pageUrl:url,title:`${title} · direct media`,
