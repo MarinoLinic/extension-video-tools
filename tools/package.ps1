@@ -23,6 +23,13 @@ function Copy-SourceTree([string]$Source,[string]$Destination) {
 }
 Copy-Item -LiteralPath (Join-Path $projectRoot 'manifest.json') -Destination $stage
 Copy-Item -LiteralPath (Join-Path $projectRoot 'extension') -Destination $stage -Recurse
+
+# Public README assets are included in both browser and portable packages.
+foreach($relative in @('README.md','favicon.svg','docs/readme-workflow.svg','docs/screenshots/README.md','docs/screenshots/popup.png','docs/screenshots/settings.png')) {
+    $documentationTarget=Join-Path $stage $relative
+    [IO.Directory]::CreateDirectory((Split-Path -Parent $documentationTarget)) | Out-Null
+    Copy-Item -LiteralPath (Join-Path $projectRoot $relative) -Destination $documentationTarget
+}
 if($Portable) {
     & (Join-Path $PSScriptRoot 'setup.ps1')
     foreach($name in @('host','tools','scripts','tests','runtime','README.md','AGENTS.md','VERIFICATION.md','THIRD_PARTY.md','Setup.cmd','Update Tools.cmd','Open Extension Folder.cmd','Build Portable.cmd','package.json')) {

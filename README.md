@@ -1,6 +1,22 @@
 # Video Tools
 
+<img src="favicon.svg" width="48" height="48" alt="" />
+
 A self-contained Windows browser extension for saving videos, MP3 audio and Markdown transcripts. Select the start and end before downloading.
+
+## Screenshots
+
+Clip controls and download settings, with a fictional source and helper response.
+
+![Popup](docs/screenshots/popup.png)
+
+![Settings](docs/screenshots/settings.png)
+
+## How it works
+
+![Workflow for Video Tools extension](docs/readme-workflow.svg)
+
+Workflow diagram. Setup registers the native companion; captions are retrieved from the source when available.
 
 ## Install
 

@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="284" viewBox="0 0 1120 284" role="img" aria-labelledby="title desc">
+<title id="title">Video Tools extension workflow</title>
+<desc id="desc">Choose a video: Current page or pasted link → Set the range: Start, end and quality → Native companion: Private download tools → Save verified output: Video, audio or captions</desc>
+<rect width="1120" height="284" rx="16" fill="#eff8ee"/>
+<text x="32" y="44" font-family="Arial,Helvetica,sans-serif" font-size="22" font-weight="700" fill="#28513a">Video Tools extension</text>
+<rect x="32" y="74" width="228" height="146" rx="12" fill="#ffffff" stroke="#28513a" stroke-opacity=".25"/>
+<circle cx="59" cy="104" r="14" fill="#28513a"/>
+<text x="59" y="109" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="14" fill="#fff">1</text>
+<text x="50" y="150" font-family="Arial,Helvetica,sans-serif" font-size="17" font-weight="600" fill="#22313a">Choose a video</text>
+<text x="50" y="181" font-family="Arial,Helvetica,sans-serif" font-size="14" fill="#4e5e68">Current page or pasted link</text>
+<path d="M273 145h20m-7-6 7 6-7 6" stroke="#28513a" stroke-width="2" fill="none"/>
+<rect x="308" y="74" width="228" height="146" rx="12" fill="#ffffff" stroke="#28513a" stroke-opacity=".25"/>
+<circle cx="335" cy="104" r="14" fill="#28513a"/>
+<text x="335" y="109" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="14" fill="#fff">2</text>
+<text x="326" y="150" font-family="Arial,Helvetica,sans-serif" font-size="17" font-weight="600" fill="#22313a">Set the range</text>
+<text x="326" y="181" font-family="Arial,Helvetica,sans-serif" font-size="14" fill="#4e5e68">Start, end and quality</text>
+<path d="M549 145h20m-7-6 7 6-7 6" stroke="#28513a" stroke-width="2" fill="none"/>
+<rect x="584" y="74" width="228" height="146" rx="12" fill="#ffffff" stroke="#28513a" stroke-opacity=".25"/>
+<circle cx="611" cy="104" r="14" fill="#28513a"/>
+<text x="611" y="109" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="14" fill="#fff">3</text>
+<text x="602" y="150" font-family="Arial,Helvetica,sans-serif" font-size="17" font-weight="600" fill="#22313a">Native companion</text>
+<text x="602" y="181" font-family="Arial,Helvetica,sans-serif" font-size="14" fill="#4e5e68">Private download tools</text>
+<path d="M825 145h20m-7-6 7 6-7 6" stroke="#28513a" stroke-width="2" fill="none"/>
+<rect x="860" y="74" width="228" height="146" rx="12" fill="#ffffff" stroke="#28513a" stroke-opacity=".25"/>
+<circle cx="887" cy="104" r="14" fill="#28513a"/>
+<text x="887" y="109" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="14" fill="#fff">4</text>
+<text x="878" y="150" font-family="Arial,Helvetica,sans-serif" font-size="17" font-weight="600" fill="#22313a">Save verified output</text>
+<text x="878" y="181" font-family="Arial,Helvetica,sans-serif" font-size="14" fill="#4e5e68">Video, audio or captions</text>
+<text x="32" y="255" font-family="Arial,Helvetica,sans-serif" font-size="13" fill="#52636c">Workflow / architecture diagram</text>
+</svg>
