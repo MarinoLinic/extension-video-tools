@@ -5,7 +5,7 @@ const root=path.resolve(import.meta.dirname,'..');
 const extension=path.join(root,'extension');
 const manifest=JSON.parse(fs.readFileSync(path.join(root,'manifest.json')));
 for (const file of fs.readdirSync(extension).filter(x=>x.endsWith('.js'))) execFileSync(process.execPath,['--check',path.join(extension,file)]);
-for (const file of [manifest.action.default_popup,manifest.background.service_worker,...Object.values(manifest.icons)]) {
+for (const file of [manifest.action.default_popup,manifest.background.service_worker,...Object.values(manifest.icons),...Object.values(manifest.action.default_icon || {})]) {
   if (!fs.existsSync(path.join(root,file))) throw new Error(`Missing manifest asset: ${file}`);
 }
 if (!manifest.key) throw new Error('Stable development key missing.');

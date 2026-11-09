@@ -100,3 +100,9 @@ Browser tests use an isolated Brave profile, Playwright and a dedicated QA desti
 For an isolated companion, copy the embedded interpreter files into its own `runtime/python`; junctioning the entire runtime can resolve Python's relative `../../host` path back to the development checkout. Share only packages and external tools if needed. The browser smoke test checks the helper's destination before downloading or clearing history and refuses non-QA saved paths.
 
 Popup sizing changes also need `tests/toolbar-popup.cjs` with `VIDEO_TOOLS_PLAYWRIGHT` and `VIDEO_TOOLS_QA_DIR` set for the isolated test. It opens the real toolbar surface in a fresh Brave profile and closes that browser afterward. A fixed-size tab alone cannot verify Chromium's popup auto-sizing; avoid viewport-relative height caps on that surface.
+
+## Project and browser icons
+
+The project, browser toolbar and extension-management icons share [favicon.svg](favicon.svg). Run `npm run icons` after changing that file, then reload the unpacked extension from the browser's extensions page. The generated PNGs cover 16, 32, 48 and 128 pixels and are committed with the extension.
+
+The asset generator uses sharp for development only. Install it locally with `npm install --no-save --package-lock=false sharp` when needed, or set `VIDEO_TOOLS_SHARP` to an existing installation. Generated icons need no renderer at runtime.
